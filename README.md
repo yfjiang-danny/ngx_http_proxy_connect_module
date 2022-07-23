@@ -220,7 +220,7 @@ Build as a dynamic module
 * Starting from nginx 1.9.11, you can also compile this module as a dynamic module, by using the `--add-dynamic-module=PATH` option instead of `--add-module=PATH` on the `./configure` command line.
 
 ```bash
-$ $ wget http://nginx.org/download/nginx-1.9.12.tar.gz
+$ wget http://nginx.org/download/nginx-1.9.12.tar.gz
 $ tar -xzvf nginx-1.9.12.tar.gz
 $ cd nginx-1.9.12/
 $ patch -p1 < /path/to/ngx_http_proxy_connect_module/patch/proxy_connect.patch
