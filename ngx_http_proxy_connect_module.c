@@ -721,13 +721,6 @@ ngx_http_proxy_connect_tunnel(ngx_http_request_t *r,
 
             n = src->recv(src, b->last, size);
 
-            if (n >= 0 && from_upstream) {
-                if (u->state.first_byte_time == (ngx_msec_t) -1) {
-                    u->state.first_byte_time = ngx_current_msec
-                        - u->start_time;
-                }
-            }
-
             if (n == NGX_AGAIN || n == 0) {
                 break;
             }
@@ -735,6 +728,13 @@ ngx_http_proxy_connect_tunnel(ngx_http_request_t *r,
             if (n > 0) {
                 do_write = 1;
                 b->last += n;
+
+                if (from_upstream) {
+                    if (u->state.first_byte_time == (ngx_msec_t) -1) {
+                        u->state.first_byte_time = ngx_current_msec
+                            - u->start_time;
+                    }
+                }
 
                 continue;
             }
