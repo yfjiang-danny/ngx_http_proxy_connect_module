@@ -78,9 +78,13 @@ events {
 http {
     %%TEST_GLOBALS_HTTP%%
 
+#    lua_load_resty_core off;
+
     log_format connect '$remote_addr - $remote_user [$time_local] "$request" '
                        '$status $body_bytes_sent var:$connect_host-$connect_port-$connect_addr '
-                       'resolve:$proxy_connect_resolve_time,connect:$proxy_connect_connect_time,';
+                       'resolve:$proxy_connect_resolve_time,'
+                       'connect:$proxy_connect_connect_time,'
+                       'fbt:$proxy_connect_first_byte_time,';
 
     access_log %%TESTDIR%%/connect.log connect;
     error_log %%TESTDIR%%/connect_error.log error;
@@ -139,6 +143,27 @@ http {
         access_log off;
         return 200 "8081 server";
     }
+
+    # for $proxy_connect_first_byte_time testing
+    server {
+        access_log off;
+        listen 8082;
+        rewrite_by_lua '
+            ngx.sleep(1)
+            ngx.say("8082 server fbt")
+        ';
+
+    }
+    server {
+        access_log off;
+        listen 8083;
+        rewrite_by_lua '
+            ngx.sleep(0.5)
+            ngx.say("8083 server fbt")
+        ';
+
+    }
+
 }
 
 EOF
@@ -196,6 +221,16 @@ like($log, qr/"CONNECT non-existent-domain.com:8081 HTTP\/1.1" 502 .+ resolve:-,
      'For CONNECT request, test both $proxy_connect_resolve_time & $proxy_connect_connect_time');
 $errlog = http_get('/connect_error.log');
 like($errlog, qr/proxy_connect: non-existent-domain.com could not be resolved .+Host not found/, 'test error.log for 502 respsone');
+
+# test first byte time
+# fbt:~1s
+http_connect_request('127.0.0.1', '8082', '/');
+$log = http_get('/connect.log');
+like($log, qr/"CONNECT 127.0.0.1:8082 HTTP\/1.1" 200 .+ resolve:0\....,connect:0\....,fbt:1\....,/, 'test first byte time: 1s');
+# fbt:~0.5s
+http_connect_request('127.0.0.1', '8083', '/');
+$log = http_get('/connect.log');
+like($log, qr/"CONNECT 127.0.0.1:8083 HTTP\/1.1" 200 .+ resolve:0\....,connect:0\....,fbt:0\.5..,/, 'test first byte time: 0.5s');
 
 $t->stop();
 
