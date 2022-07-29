@@ -38,6 +38,7 @@ Table of Contents
       * [$proxy_connect_send_timeout](#proxy_connect_send_timeout-1)
       * [$proxy_connect_resolve_time](#proxy_connect_resolve_time)
       * [$proxy_connect_connect_time](#proxy_connect_connect_time)
+      * [$proxy_connect_first_byte_time](#proxy_connect_first_byte_time)
       * [$proxy_connect_response](#proxy_connect_response-1)
    * [Compatibility](#compatibility)
       * [Nginx Compatibility](#nginx-compatibility)
@@ -478,6 +479,15 @@ Keeps time spent on establishing a connection with the upstream server; the time
 
 * Value of "" means this module does not work on this request.
 * Value of "-" means name resolving or connecting failed.
+
+
+$proxy_connect_first_byte_time
+---------------------------
+
+Keeps time to receive the first byte of data from the upstream server; the time is kept in seconds with millisecond resolution.
+
+* Value of "" means this module does not work on this request.
+* Value of "-" means name resolving, connecting or receving failed.
 
 
 $proxy_connect_response

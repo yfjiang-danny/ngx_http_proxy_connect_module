@@ -45,6 +45,7 @@ typedef struct {
 typedef struct {
     ngx_msec_t                       resolve_time;
     ngx_msec_t                       connect_time;
+    ngx_msec_t                       first_byte_time;
 
     /* TODO:
     off_t                            bytes_received;
@@ -132,6 +133,8 @@ static void ngx_http_proxy_connect_variable_set_time(ngx_http_request_t *r,
 static ngx_int_t ngx_http_proxy_connect_resolve_time_variable(ngx_http_request_t *r,
     ngx_http_variable_value_t *v, uintptr_t data);
 static ngx_int_t ngx_http_proxy_connect_connect_time_variable(ngx_http_request_t *r,
+    ngx_http_variable_value_t *v, uintptr_t data);
+static ngx_int_t ngx_http_proxy_connect_first_byte_time_variable(ngx_http_request_t *r,
     ngx_http_variable_value_t *v, uintptr_t data);
 static ngx_int_t ngx_http_proxy_connect_variable_get_response(ngx_http_request_t *r,
     ngx_http_variable_value_t *v, uintptr_t data);
@@ -275,6 +278,10 @@ static ngx_http_variable_t  ngx_http_proxy_connect_vars[] = {
 
     { ngx_string("proxy_connect_connect_time"), NULL,
       ngx_http_proxy_connect_connect_time_variable, 0,
+      NGX_HTTP_VAR_NOCACHEABLE, 0 },
+
+    { ngx_string("proxy_connect_first_byte_time"), NULL,
+      ngx_http_proxy_connect_first_byte_time_variable, 0,
       NGX_HTTP_VAR_NOCACHEABLE, 0 },
 
     { ngx_string("proxy_connect_response"),
@@ -722,6 +729,13 @@ ngx_http_proxy_connect_tunnel(ngx_http_request_t *r,
                 do_write = 1;
                 b->last += n;
 
+                if (from_upstream) {
+                    if (u->state.first_byte_time == (ngx_msec_t) -1) {
+                        u->state.first_byte_time = ngx_current_msec
+                            - u->start_time;
+                    }
+                }
+
                 continue;
             }
 
@@ -1042,6 +1056,7 @@ ngx_http_proxy_connect_process_connect(ngx_http_request_t *r,
 
     u->start_time = ngx_current_msec;
     u->state.connect_time = (ngx_msec_t) -1;
+    u->state.first_byte_time = (ngx_msec_t) -1;
 
     rc = ngx_event_connect_peer(&u->peer);
 
@@ -2179,6 +2194,63 @@ ngx_http_proxy_connect_connect_time_variable(ngx_http_request_t *r,
     v->data = p;
 
     ms = u->state.connect_time;
+
+    if (ms != -1) {
+        ms = ngx_max(ms, 0);
+        p = ngx_sprintf(p, "%T.%03M", (time_t) ms / 1000, ms % 1000);
+
+    } else {
+        *p++ = '-';
+    }
+
+    v->len = p - v->data;
+
+    return NGX_OK;
+}
+
+
+static ngx_int_t
+ngx_http_proxy_connect_first_byte_time_variable(ngx_http_request_t *r,
+    ngx_http_variable_value_t *v, uintptr_t data)
+{
+    u_char                             *p;
+    size_t                              len;
+    ngx_msec_int_t                      ms;
+    ngx_http_proxy_connect_ctx_t       *ctx;
+    ngx_http_proxy_connect_upstream_t  *u;
+
+    if (r->method != NGX_HTTP_CONNECT) {
+        return NGX_OK;
+    }
+
+    v->valid = 1;
+    v->no_cacheable = 0;
+    v->not_found = 0;
+
+    ctx = ngx_http_get_module_ctx(r, ngx_http_proxy_connect_module);
+
+    if (ctx == NULL) {
+        v->not_found = 1;
+        return NGX_OK;
+    }
+
+    u = ctx->u;
+
+    if (u == NULL || !u->connected) {
+        v->not_found = 1;
+        return NGX_OK;
+    }
+
+    len = NGX_TIME_T_LEN + 4;
+
+    p = ngx_pnalloc(r->pool, len);
+    if (p == NULL) {
+        return NGX_ERROR;
+    }
+
+    v->data = p;
+
+    ms = u->state.first_byte_time;
 
     if (ms != -1) {
         ms = ngx_max(ms, 0);
