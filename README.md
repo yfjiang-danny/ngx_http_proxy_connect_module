@@ -174,6 +174,7 @@ Select patch
 ------------
 
 * Select right patch for building:
+ * All patch files have been included in `patch/` directory of this module. You dont need to download the patch directly from web page.
 
 | nginx version | enable REWRITE phase | patch |
 | --: | --: | --: |
