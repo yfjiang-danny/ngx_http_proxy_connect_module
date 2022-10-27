@@ -10,6 +10,11 @@ jobs:
   build-and-test-for-nginx:
 
     runs-on: "ubuntu-20.04"
+    strategy:
+      fail-fast: false
+      matrix:
+        compiler:
+         - { compiler: GNU,  CC: gcc,  CXX: g++}
 
     steps:
     - uses: actions/checkout@v3
@@ -19,11 +24,13 @@ jobs:
          sudo apt remove nginx libgd3
          sudo apt install -y libgd-dev libgeoip-dev libxslt1-dev libpcre++0v5 libpcre++-dev liblua5.1-0-dev lua5.1 libperl-dev
     - name: get nginx source
-    - run：|
+      run：|
          pwd
          wget https://nginx.org/download/nginx-1.22.1.tar.gz
          tar xvf nginx-1.22.1.tar.gz
     - name: build
+      env:
+        CC: ${{ matrix.compiler.CC }}
       run: |
          pwd
          cd nginx-1.22.1
