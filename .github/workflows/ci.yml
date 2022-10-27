@@ -1,0 +1,40 @@
+name: C CI
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+
+jobs:
+  build-and-test-for-nginx:
+
+    runs-on: "ubuntu-20.04"
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: get dependencies
+      run: |
+         sudo apt update
+         sudo apt remove nginx libgd3
+         sudo apt install -y libgd-dev libgeoip-dev libxslt1-dev libpcre++0v5 libpcre++-dev liblua5.1-0-dev lua5.1 libperl-dev
+    - name: get nginx source
+    - run：|
+         pwd
+         wget https://nginx.org/download/nginx-1.22.1.tar.gz
+         tar xvf nginx-1.22.1.tar.gz
+    - name: build
+      run: |
+         pwd
+         cd nginx-1.22.1
+         patch -p1 < ../patch/proxy_connect_rewrite_102101.patch
+         ./configure --prefix=output --add-module=../
+         make -j
+    - name: test
+      run:  |
+         pwd
+         git clone https://github.com/nginx/nginx-tests
+         nginx_tests_lib_path=./nginx-tests/lib
+         proxy_connect_test_cases=../t
+         TEST_NGINX_UNSAFE=yes TEST_NGINX_BINARY=objs/nginx prove -v -I $nginx_tests_lib_path  $proxy_connect_test_cases
+
