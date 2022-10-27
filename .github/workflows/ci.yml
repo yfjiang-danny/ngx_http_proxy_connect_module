@@ -7,10 +7,12 @@ on:
     branches: [ "master" ]
 
 jobs:
-  build-and-test-for-nginx:
-    runs-on: "ubuntu-20.04"
+  build-and-test-nginx:
     strategy:
-      fail-fast: false
+       matrix:
+         version: [1.22.1, 1.23.2]
+       fail-fast: false
+    runs-on: "ubuntu-20.04"
 
     steps:
     - uses: actions/checkout@v3
@@ -39,9 +41,9 @@ jobs:
     - name: get nginx source
       run: |
          pwd
-         wget https://nginx.org/download/nginx-1.22.1.tar.gz
-         tar xf nginx-1.22.1.tar.gz
-         mv nginx-1.22.1 nginx
+         wget https://nginx.org/download/nginx-${{ matrix.version }}.tar.gz
+         tar xf nginx-${{ matrix.version }}.tar.gz
+         mv nginx-${{ matrix.version }} nginx
     - name: build
       run: |
          pwd
