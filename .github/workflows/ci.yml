@@ -40,6 +40,7 @@ jobs:
     - name: test
       run:  |
          pwd
+         cd nginx-1.22.1
          git clone https://github.com/nginx/nginx-tests
          nginx_tests_lib_path=./nginx-tests/lib
          proxy_connect_test_cases=../t
