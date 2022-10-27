@@ -37,8 +37,11 @@ jobs:
          patch -p1 < ../patch/proxy_connect_rewrite_102101.patch
          ./configure --prefix=output --add-module=../
          make -j
+    - name: get dependencies for test environment
+      run: |
+         sudo perl -MCPAN -e 'install Net::DNS' 
     - name: test
-      run:  |
+      run: |
          pwd
          cd nginx-1.22.1
          git clone https://github.com/nginx/nginx-tests
