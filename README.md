@@ -260,9 +260,20 @@ Test Suite
 
 ```bash
 $ hg clone http://hg.nginx.org/nginx-tests/
+
+# If you use latest lua-nginx-module that needs lua-resty-core and
+# lua-resty-lrucache, you should add "lua_package_path ...;" directive
+# into nginx.conf of test cases. You can use the following command:
+#
+# $ export TEST_NGINX_GLOBALS_HTTP='lua_package_path "/path/to/nginx/lib/lua/?.lua;;";'
+
 $ export TEST_NGINX_BINARY=/path/to/nginx/binary
 $ prove -v -I /path/to/nginx-tests/lib /path/to/ngx_http_proxy_connect_module/t/
 ```
+
+* For the complete process of building and testing this module, see:
+  * workflow files: [here](https://github.com/chobits/ngx_http_proxy_connect_module/tree/master/.github/workflows)
+  * runs from all workflows: [here](https://github.com/chobits/ngx_http_proxy_connect_module/actions)
 
 Error Log
 =========
