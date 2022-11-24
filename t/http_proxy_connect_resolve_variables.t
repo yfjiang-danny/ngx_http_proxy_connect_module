@@ -93,7 +93,7 @@ http {
                        'fbt:$proxy_connect_first_byte_time,';
 
     access_log %%TESTDIR%%/connect.log connect;
-    error_log %%TESTDIR%%/connect_error.log error;
+    error_log %%TESTDIR%%/connect_error.log info;
 
     resolver 127.0.0.1:18085 ipv6=off;      # NOTE: cannot connect ipv6 address ::1 in mac os x.
 
@@ -134,6 +134,16 @@ http {
         if ($request ~ "127.0.0.1:8083") {
             # must be larger than 0.5s (server 8082 lua sleep(0.5s))
             set $proxy_connect_read_timeout "700ms";
+        }
+
+        if ($request ~ "127.0.0.01:8082") {
+            # must be less than 1s (server 8082 lua sleep(1s))
+            set $proxy_connect_read_timeout "800ms";
+        }
+
+        if ($request ~ "127.0.0.01:8083") {
+            # must be less than 0.5s (server 8082 lua sleep(1s))
+            set $proxy_connect_read_timeout "300ms";
         }
 
         location / {
@@ -241,6 +251,22 @@ like($r, qr/8083 server fbt/, "test first byte time: 0.5s, receive response from
 like($t->read_file('connect.log'),
      qr/"CONNECT 127.0.0.1:8083 HTTP\/1.1" 200 .+ resolve:0\....,connect:0\....,fbt:0\.5..,/,
      'test first byte time: 0.5s');
+
+# test timeout
+$t->write_file('connect_error.log', "");
+$r = http_connect_request('127.0.0.01', '8082', '/');
+is($r, "", "test first byte time: 1s, timeout");
+#'2022/11/24 20:51:13 [info] 15239#0: *15 proxy_connect: connection timed out (110: Connection timed out) while proxying connection, client: 127.0.0.1, server: localhost, request: "CONNECT 127.0.0.01:8082 HTTP/1.1", host: "127.0.0.01"
+like($t->read_file('connect_error.log'),
+     qr/\[info\].* proxy_connect: connection timed out.+ request: "CONNECT 127\.0\.0\.01:8082 HTTP\/..."/,
+     'test first byte time: 1s, check timeout in error log');
+
+$t->write_file('connect_error.log', "");
+$r = http_connect_request('127.0.0.01', '8083', '/');
+is($r, "", "test first byte time: 0.5s, timeout");
+like($t->read_file('connect_error.log'),
+     qr/\[info\].* proxy_connect: connection timed out.+ request: "CONNECT 127\.0\.0\.01:8083 HTTP\/..."/,
+     'test first byte time: 1s, check timeout in error log');
 
 $t->stop();
 
