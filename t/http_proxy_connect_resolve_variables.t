@@ -126,6 +126,16 @@ http {
             set $proxy_connect_send_timeout     "2ms";
         }
 
+        if ($request ~ "127.0.0.1:8082") {
+            # must be larger than 1s (server 8082 lua sleep(1s))
+            set $proxy_connect_read_timeout "1200ms";
+        }
+
+        if ($request ~ "127.0.0.1:8083") {
+            # must be larger than 0.5s (server 8082 lua sleep(0.5s))
+            set $proxy_connect_read_timeout "700ms";
+        }
+
         location / {
             proxy_pass http://127.0.0.01:8081;
         }
@@ -157,6 +167,7 @@ http {
         rewrite_by_lua '
             ngx.sleep(1)
             ngx.say("8082 server fbt")
+            ngx.exit(ngx.HTTP_OK)
         ';
 
     }
@@ -166,6 +177,7 @@ http {
         rewrite_by_lua '
             ngx.sleep(0.5)
             ngx.say("8083 server fbt")
+            ngx.exit(ngx.HTTP_OK)
         ';
 
     }
@@ -230,11 +242,16 @@ like($errlog, qr/proxy_connect: non-existent-domain.com could not be resolved .+
 
 # test first byte time
 # fbt:~1s
-http_connect_request('127.0.0.1', '8082', '/');
+my $r;
+$r = http_connect_request('127.0.0.1', '8082', '/');
+like($r, qr/8082 server fbt/, "test first byte time: 1s, receive response from backend server");
 $log = http_get('/connect.log');
 like($log, qr/"CONNECT 127.0.0.1:8082 HTTP\/1.1" 200 .+ resolve:0\....,connect:0\....,fbt:1\....,/, 'test first byte time: 1s');
+
 # fbt:~0.5s
-http_connect_request('127.0.0.1', '8083', '/');
+$r = http_connect_request('127.0.0.1', '8083', '/');
+like($r, qr/8083 server fbt/, "test first byte time: 0.5s, receive response from backend server");
+
 $log = http_get('/connect.log');
 like($log, qr/"CONNECT 127.0.0.1:8083 HTTP\/1.1" 200 .+ resolve:0\....,connect:0\....,fbt:0\.5..,/, 'test first byte time: 0.5s');
 
