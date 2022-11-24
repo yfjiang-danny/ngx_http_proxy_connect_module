@@ -53,12 +53,6 @@ my %aroute_map = (
 
 # AAAA record (ipv6)
 my %aaaaroute_map;
-# my %aaaaroute_map = (
-#     'www.test-a.com' => [[300, "[::1]"]],
-#     'www.test-b.com' => [[300, "[::1]"]],
-#     #'www.test-a.com' => [[300, "127.0.0.1"]],
-#     #'www.test-b.com' => [[300, "127.0.0.1"]],
-# );
 
 start_bind();
 
@@ -67,20 +61,16 @@ start_bind();
 ###############################################################################
 
 my $nginx_conf = <<'EOF';
-
 %%TEST_GLOBALS%%
-
 daemon         off;
-
-events {
-}
+events { }
 
 http {
     %%TEST_GLOBALS_HTTP%%
 
     #LUA_PACKAGE_PATH
-    # If you build nginx with lua-nginx-module, please enable           
-    # directive "lua_package_path". For more details, see:              
+    # If you build nginx with lua-nginx-module, please enable
+    # directive "lua_package_path". For more details, see:
     #  https://github.com/openresty/lua-nginx-module#installation
     #lua_package_path "/path/to/lib/lua/?.lua;;";
 
@@ -103,7 +93,6 @@ http {
         proxy_connect_connect_timeout 10s;
         proxy_connect_read_timeout 10s;
         proxy_connect_send_timeout 10s;
-        proxy_connect_send_lowat 0;
 
         set $proxy_connect_connect_timeout  "101ms";
         set $proxy_connect_send_timeout     "102ms";
@@ -121,19 +110,6 @@ http {
         location / {
             proxy_pass http://127.0.0.01:8081;
         }
-
-        # used to output connect.log
-        location = /connect.log {
-            access_log off;
-            root %%TESTDIR%%/;
-        }
-
-        # used to output error.log
-        location = /connect_error.log {
-            access_log off;
-            root %%TESTDIR%%/;
-        }
-
     }
 }
 
@@ -157,26 +133,26 @@ if ($@) {
 #  exit
 #}
 
-my $log;
-my $errlog;
-
 TODO: {
     local $TODO = '# This case will pass, if connecting 8.8.8.8 timed out.';
     like(http_connect_request('test-connect-timeout.com', '8888', '/'), qr/504/, 'connect timed out: set $var');
-    $log = http_get('/connect.log');
-    like($log, qr/"CONNECT test-connect-timeout.com:8888 HTTP\/1.1" 504 .+ c:1,s:102,r:103/,
+    like($t->read_file('connect.log'),
+         qr/"CONNECT test-connect-timeout.com:8888 HTTP\/1.1" 504 .+ c:1,s:102,r:103/,
         'connect timed out log: get $var & status=504');
-    $errlog = http_get('/connect_error.log');
-    like($errlog, qr/proxy_connect: upstream connect timed out \(peer:8\.8\.8\.8:8888\) while connecting to upstream/,
+    like($t->read_file('connect_error.log'),
+         qr/proxy_connect: upstream connect timed out \(peer:8\.8\.8\.8:8888\) while connecting to upstream/,
         'connect timed out error log');
 }
 
 http_connect_request('test-read-timeout.com', '8888', '/');
 
-# test $proxy_connect_*_timeout
-$log = http_get('/connect.log');
-like($log, qr/"CONNECT test-connect-timeout.com:8888 HTTP\/1.1" ... .+ c:1,s:102,r:103/, 'connect timed out log: get $var');
-like($log, qr/"CONNECT test-read-timeout.com:8888 HTTP\/1.1" ... .+ c:3,s:2,r:1/, 'connect/send/read timed out log: get $var');
+# test reading variables of $proxy_connect_*_timeout
+like($t->read_file('connect.log'),
+     qr/"CONNECT test-connect-timeout.com:8888 HTTP\/1.1" ... .+ c:1,s:102,r:103/,
+     'connect timed out log: get $var');
+like($t->read_file('connect.log'),
+     qr/"CONNECT test-read-timeout.com:8888 HTTP\/1.1" ... .+ c:3,s:2,r:1/,
+     'connect/send/read timed out log: get $var');
 
 $t->stop();
 

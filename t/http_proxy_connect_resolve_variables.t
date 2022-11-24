@@ -139,19 +139,6 @@ http {
         location / {
             proxy_pass http://127.0.0.01:8081;
         }
-
-        # used to output connect.log
-        location = /connect.log {
-            access_log off;
-            root %%TESTDIR%%/;
-        }
-
-        # used to output error.log
-        location = /connect_error.log {
-            access_log off;
-            root %%TESTDIR%%/;
-        }
-
     }
 
     server {
@@ -204,56 +191,56 @@ if ($@) {
 #  exit
 #}
 
-my $log;
-my $errlog;
-
 TODO: {
     # $proxy_connect_connect_time has value, $proxy_connect_connect_time is "-"
     local $TODO = '# This case will pass, if connecting 8.8.8.8 timed out.';
     http_connect_request('test-connect-timeout.com', '8888', '/');
-    $log = http_get('/connect.log');
-    like($log, qr/"CONNECT test-connect-timeout.com:8888 HTTP\/1.1" 504 .+ resolve:\d+\.\d+,connect:-/,
+    like($t->read_file('connect.log'),
+         qr/"CONNECT test-connect-timeout.com:8888 HTTP\/1.1" 504 .+ resolve:\d+\.\d+,connect:-/,
         'connect timed out log: get $var & status=504');
-    $errlog = http_get('/connect_error.log');
-    like($errlog, qr/proxy_connect: upstream connect timed out \(peer:8\.8\.8\.8:8888\) while connecting to upstream/,
+    like($t->read_file('connect_error.log'),
+         qr/proxy_connect: upstream connect timed out \(peer:8\.8\.8\.8:8888\) while connecting to upstream/,
         'connect timed out error log');
 }
 
 # Both $proxy_connect_resolve_time & $proxy_connect_connect_time are empty string.
 http_get('/200');
-$log = http_get('/connect.log');
-like($log, qr/GET \/200.*resolve:,connect:,/,
+like($t->read_file('connect.log'),
+     qr/GET \/200.*resolve:,connect:,/,
      'For GET request, both $proxy_connect_resolve_time & $proxy_connect_connect_time are empty string');
 
 
 # Both $proxy_connect_resolve_time & $proxy_connect_connect_time have value.
 http_connect_request('127.0.0.1', '8081', '/');
-$log = http_get('/connect.log');
-like($log, qr/"CONNECT 127.0.0.1:8081 HTTP\/1.1" 200 .+ resolve:0\.\d+,connect:0\.\d+,/,
+like($t->read_file('connect.log'),
+     qr/"CONNECT 127.0.0.1:8081 HTTP\/1.1" 200 .+ resolve:0\.\d+,connect:0\.\d+,/,
      'For CONNECT request, test both $proxy_connect_resolve_time & $proxy_connect_connect_time');
 
 # DNS resolving fails. Both $proxy_connect_resolve_time & $proxy_connect_connect_time are "-".
 http_connect_request('non-existent-domain.com', '8081', '/');
-$log = http_get('/connect.log');
-like($log, qr/"CONNECT non-existent-domain.com:8081 HTTP\/1.1" 502 .+ resolve:-,connect:-,/,
+like($t->read_file('connect.log'),
+     qr/"CONNECT non-existent-domain.com:8081 HTTP\/1.1" 502 .+ resolve:-,connect:-,/,
      'For CONNECT request, test both $proxy_connect_resolve_time & $proxy_connect_connect_time');
-$errlog = http_get('/connect_error.log');
-like($errlog, qr/proxy_connect: non-existent-domain.com could not be resolved .+Host not found/, 'test error.log for 502 respsone');
+like($t->read_file('connect_error.log'),
+     qr/proxy_connect: non-existent-domain.com could not be resolved .+Host not found/,
+     'test error.log for 502 respsone');
 
 # test first byte time
 # fbt:~1s
 my $r;
 $r = http_connect_request('127.0.0.1', '8082', '/');
 like($r, qr/8082 server fbt/, "test first byte time: 1s, receive response from backend server");
-$log = http_get('/connect.log');
-like($log, qr/"CONNECT 127.0.0.1:8082 HTTP\/1.1" 200 .+ resolve:0\....,connect:0\....,fbt:1\....,/, 'test first byte time: 1s');
+like($t->read_file('connect.log'),
+     qr/"CONNECT 127.0.0.1:8082 HTTP\/1.1" 200 .+ resolve:0\....,connect:0\....,fbt:1\....,/,
+     'test first byte time: 1s');
 
 # fbt:~0.5s
 $r = http_connect_request('127.0.0.1', '8083', '/');
 like($r, qr/8083 server fbt/, "test first byte time: 0.5s, receive response from backend server");
 
-$log = http_get('/connect.log');
-like($log, qr/"CONNECT 127.0.0.1:8083 HTTP\/1.1" 200 .+ resolve:0\....,connect:0\....,fbt:0\.5..,/, 'test first byte time: 0.5s');
+like($t->read_file('connect.log'),
+     qr/"CONNECT 127.0.0.1:8083 HTTP\/1.1" 200 .+ resolve:0\....,connect:0\....,fbt:0\.5..,/,
+     'test first byte time: 0.5s');
 
 $t->stop();
 
