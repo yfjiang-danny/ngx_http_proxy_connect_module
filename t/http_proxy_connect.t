@@ -111,9 +111,7 @@ http {
         proxy_connect;
         proxy_connect_allow 443 80 8081;
         proxy_connect_connect_timeout 10s;
-        proxy_connect_read_timeout 10s;
-        proxy_connect_send_timeout 10s;
-        proxy_connect_send_lowat 0;
+        proxy_connect_data_timeout 10s;
         proxy_connect_address $proxy_remote_address;
         proxy_connect_bind $proxy_local_address;
 
@@ -615,7 +613,7 @@ sub start_bind {
         print "+ DNS server: working\n";
 
         END {
-            print("+ try to stop $bind_pid\n");
+            print("+ try to stop\n");
             stop_bind();
         }
     }
