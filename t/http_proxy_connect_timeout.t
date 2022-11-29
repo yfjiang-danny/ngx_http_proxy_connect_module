@@ -76,7 +76,7 @@ http {
 
     log_format connect '$remote_addr - $remote_user [$time_local] "$request" '
                        '$status $body_bytes_sent var:$connect_host-$connect_port-$connect_addr '
-                       ' c:$proxy_connect_connect_timeout,s:$proxy_connect_send_timeout,r:$proxy_connect_read_timeout';
+                       ' c:$proxy_connect_connect_timeout,r:$proxy_connect_read_timeout';
 
     access_log %%TESTDIR%%/connect.log connect;
     error_log %%TESTDIR%%/connect_error.log error;
@@ -92,10 +92,8 @@ http {
         proxy_connect_allow all;
         proxy_connect_connect_timeout 10s;
         proxy_connect_read_timeout 10s;
-        proxy_connect_send_timeout 10s;
 
         set $proxy_connect_connect_timeout  "101ms";
-        set $proxy_connect_send_timeout     "102ms";
         set $proxy_connect_read_timeout     "103ms";
 
         if ($host = "test-connect-timeout.com") {
@@ -104,7 +102,6 @@ http {
         if ($host = "test-read-timeout.com") {
             set $proxy_connect_connect_timeout  "3ms";
             set $proxy_connect_read_timeout     "1ms";
-            set $proxy_connect_send_timeout     "2ms";
         }
 
         location / {
@@ -137,7 +134,7 @@ TODO: {
     local $TODO = '# This case will pass, if connecting 8.8.8.8 timed out.';
     like(http_connect_request('test-connect-timeout.com', '8888', '/'), qr/504/, 'connect timed out: set $var');
     like($t->read_file('connect.log'),
-         qr/"CONNECT test-connect-timeout.com:8888 HTTP\/1.1" 504 .+ c:1,s:102,r:103/,
+         qr/"CONNECT test-connect-timeout.com:8888 HTTP\/1.1" 504 .+ c:1,r:103/,
         'connect timed out log: get $var & status=504');
     like($t->read_file('connect_error.log'),
          qr/proxy_connect: upstream connect timed out \(peer:8\.8\.8\.8:8888\) while connecting to upstream/,
@@ -148,10 +145,10 @@ http_connect_request('test-read-timeout.com', '8888', '/');
 
 # test reading variables of $proxy_connect_*_timeout
 like($t->read_file('connect.log'),
-     qr/"CONNECT test-connect-timeout.com:8888 HTTP\/1.1" ... .+ c:1,s:102,r:103/,
+     qr/"CONNECT test-connect-timeout.com:8888 HTTP\/1.1" ... .+ c:1,r:103/,
      'connect timed out log: get $var');
 like($t->read_file('connect.log'),
-     qr/"CONNECT test-read-timeout.com:8888 HTTP\/1.1" ... .+ c:3,s:2,r:1/,
+     qr/"CONNECT test-read-timeout.com:8888 HTTP\/1.1" ... .+ c:3,r:1/,
      'connect/send/read timed out log: get $var');
 
 $t->stop();

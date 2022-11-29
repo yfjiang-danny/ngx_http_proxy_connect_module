@@ -106,11 +106,9 @@ http {
         proxy_connect_allow all;
         proxy_connect_connect_timeout 10s;
         proxy_connect_read_timeout 10s;
-        proxy_connect_send_timeout 10s;
         proxy_connect_send_lowat 0;
 
         set $proxy_connect_connect_timeout  "101ms";
-        set $proxy_connect_send_timeout     "102ms";
         set $proxy_connect_read_timeout     "103ms";
 
         if ($uri = "/200") {
@@ -123,7 +121,6 @@ http {
         if ($host = "test-read-timeout.com") {
             set $proxy_connect_connect_timeout  "3ms";
             set $proxy_connect_read_timeout     "1ms";
-            set $proxy_connect_send_timeout     "2ms";
         }
 
         if ($request ~ "127.0.0.1:8082") {
