@@ -45,7 +45,7 @@ http {
 
     log_format connect '$remote_addr - $remote_user [$time_local] "$request" '
                        '$status $body_bytes_sent var:$connect_host-$connect_port-$connect_addr '
-                       ' c:$proxy_connect_connect_timeout,r:$proxy_connect_read_timeout';
+                       ' c:$proxy_connect_connect_timeout,r:$proxy_connect_data_timeout';
 
     access_log %%TESTDIR%%/connect.log connect;
     error_log %%TESTDIR%%/connect_error.log error;
@@ -60,17 +60,17 @@ http {
         proxy_connect;
         proxy_connect_allow all;
         proxy_connect_connect_timeout 10s;
-        proxy_connect_read_timeout 10s;
+        proxy_connect_data_timeout 10s;
 
         set $proxy_connect_connect_timeout  "101ms";
-        set $proxy_connect_read_timeout     "103ms";
+        set $proxy_connect_data_timeout     "103ms";
 
         if ($host = "test-connect-timeout.com") {
             set $proxy_connect_connect_timeout "1ms";
         }
         if ($host = "test-read-timeout.com") {
             set $proxy_connect_connect_timeout  "3ms";
-            set $proxy_connect_read_timeout     "1ms";
+            set $proxy_connect_data_timeout     "1ms";
         }
 
         location / {
@@ -140,7 +140,7 @@ http {
 
     log_format connect '$remote_addr - $remote_user [$time_local] "$request" '
                        '$status $body_bytes_sent var:$connect_host-$connect_port-$connect_addr '
-                       ' c:$proxy_connect_connect_timeout,r:$proxy_connect_read_timeout';
+                       ' c:$proxy_connect_connect_timeout,r:$proxy_connect_data_timeout';
 
     access_log %%TESTDIR%%/connect.log connect;
     error_log %%TESTDIR%%/connect_timeout_error.log debug;
@@ -155,12 +155,12 @@ http {
         proxy_connect;
         proxy_connect_allow all;
 
-        proxy_connect_read_timeout 10s;
+        proxy_connect_data_timeout 10s;
 
         proxy_connect_address "127.0.0.1:8081";
 
         if ($http_x_timeout) {
-            set $proxy_connect_read_timeout     $http_x_timeout;
+            set $proxy_connect_data_timeout     $http_x_timeout;
         }
 
         location / {
@@ -192,7 +192,7 @@ $t->waitforsocket('127.0.0.1:' . port(8081))
   or die "Can't start stream backend server";
 print("+ try to waitforsocket...done\n");
 
-# test time out of data proxying ( proxy_connect_read_timeout)
+# test time out of data proxying ( proxy_connect_data_timeout)
 my $str = '1234567890' x 10 . 'F';
 my $length = length($str);
 my $sport =  port(8081);

@@ -24,8 +24,9 @@ Table of Contents
       * [proxy_connect](#proxy_connect)
       * [proxy_connect_allow](#proxy_connect_allow)
       * [proxy_connect_connect_timeout](#proxy_connect_connect_timeout)
-      * [proxy_connect_read_timeout](#proxy_connect_read_timeout)
-      * [proxy_connect_send_timeout](#proxy_connect_send_timeout)
+      * [proxy_connect_data_timeout](#proxy_connect_data_timeout)
+      * [proxy_connect_read_timeout(deprecated)](#proxy_connect_read_timeout)
+      * [proxy_connect_send_timeout(deprecated)](#proxy_connect_send_timeout)
       * [proxy_connect_address](#proxy_connect_address)
       * [proxy_connect_bind](#proxy_connect_bind)
       * [proxy_connect_response](#proxy_connect_response)
@@ -34,8 +35,9 @@ Table of Contents
       * [$connect_port](#connect_port)
       * [$connect_addr](#connect_addr)
       * [$proxy_connect_connect_timeout](#proxy_connect_connect_timeout-1)
-      * [$proxy_connect_read_timeout](#proxy_connect_read_timeout-1)
-      * [$proxy_connect_send_timeout](#proxy_connect_send_timeout-1)
+      * [$proxy_connect_data_timeout](#proxy_connect_data_timeout-1)
+      * [$proxy_connect_read_timeout(deprecated)](#proxy_connect_read_timeout-1)
+      * [$proxy_connect_send_timeout(deprecated)](#proxy_connect_send_timeout-1)
       * [$proxy_connect_resolve_time](#proxy_connect_resolve_time)
       * [$proxy_connect_connect_time](#proxy_connect_connect_time)
       * [$proxy_connect_first_byte_time](#proxy_connect_first_byte_time)
@@ -67,8 +69,7 @@ Configuration Example
      proxy_connect;
      proxy_connect_allow            443 563;
      proxy_connect_connect_timeout  10s;
-     proxy_connect_read_timeout     10s;
-     proxy_connect_send_timeout     10s;
+     proxy_connect_data_timeout     10s;
 
      # forward proxy for non-CONNECT request
      location / {
@@ -329,6 +330,14 @@ Context: `server`
 
 Defines a timeout for establishing a connection with a proxied server.
 
+proxy_connect_data_timeout
+--------------------------
+
+Syntax: **proxy_connect_data_timeout `time`**  
+Default: `60s`  
+Context: `server`  
+
+Sets the timeout between two successive read or write operations on client or proxied server connections. If no data is transmitted within this time, the connection is closed.
 
 proxy_connect_read_timeout
 --------------------------
@@ -337,7 +346,9 @@ Syntax: **proxy_connect_read_timeout `time`**
 Default: `60s`  
 Context: `server`  
 
-Sets the timeout between two successive read or write operations on client or proxied server connections. If no data is transmitted within this time, the connection is closed.
+Deprecated.
+
+It has the same function as the directive `proxy_connect_data_timeout` for compatibility. You can configure only one of the directives (`proxy_connect_data_timeout` or `proxy_connect_read_timeout`).
 
 proxy_connect_send_timeout
 --------------------------
@@ -346,8 +357,9 @@ Syntax: **proxy_connect_send_timeout `time`**
 Default: `60s`  
 Context: `server`  
 
-Deprecated, it has no function.  
-Use the directive `proxy_connect_read_timeout` instead for both read and write operations.
+Deprecated.
+
+It has no function.
 
 proxy_connect_address
 ---------------------
@@ -450,27 +462,32 @@ For example:
 # Set default value
 
 proxy_connect_connect_timeout   10s;
-proxy_connect_read_timeout      10s;
-proxy_connect_send_timeout      10s;
+proxy_connect_data_timeout      10s;
 
 # Overlap default value
 
 if ($host = "test.com") {
     set $proxy_connect_connect_timeout  "10ms";
-    set $proxy_connect_read_timeout     "10ms";
-    set $proxy_connect_send_timeout     "10ms";
+    set $proxy_connect_data_timeout     "10ms";
 }
 ```
+
+$proxy_connect_data_timeout
+---------------------------
+
+Get or set a timeout of [`proxy_connect_data_timeout` directive](#proxy_connect_data_timeout).
 
 $proxy_connect_read_timeout
 ---------------------------
 
-Get or set a timeout of [`proxy_connect_read_timeout` directive](#proxy_connect_read_timeout).
+Deprecated. 
+It still can get or set a timeout of [`proxy_connect_data_timeout` directive](#proxy_connect_data_timeout) for compatibility.
 
 $proxy_connect_send_timeout
 ---------------------------
 
 Deprecated.
+It has no function.
 
 $proxy_connect_resolve_time
 ---------------------------

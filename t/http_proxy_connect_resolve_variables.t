@@ -105,10 +105,10 @@ http {
         proxy_connect;
         proxy_connect_allow all;
         proxy_connect_connect_timeout 10s;
-        proxy_connect_read_timeout 10s;
+        proxy_connect_data_timeout 10s;
 
         set $proxy_connect_connect_timeout  "101ms";
-        set $proxy_connect_read_timeout     "103ms";
+        set $proxy_connect_data_timeout     "103ms";
 
         if ($uri = "/200") {
             return 200;
@@ -119,27 +119,27 @@ http {
         }
         if ($host = "test-read-timeout.com") {
             set $proxy_connect_connect_timeout  "3ms";
-            set $proxy_connect_read_timeout     "1ms";
+            set $proxy_connect_data_timeout     "1ms";
         }
 
         if ($request ~ "127.0.0.1:8082") {
             # must be larger than 1s (server 8082 lua sleep(1s))
-            set $proxy_connect_read_timeout "1200ms";
+            set $proxy_connect_data_timeout "1200ms";
         }
 
         if ($request ~ "127.0.0.1:8083") {
             # must be larger than 0.5s (server 8082 lua sleep(0.5s))
-            set $proxy_connect_read_timeout "700ms";
+            set $proxy_connect_data_timeout "700ms";
         }
 
         if ($request ~ "127.0.0.01:8082") {
             # must be less than 1s (server 8082 lua sleep(1s))
-            set $proxy_connect_read_timeout "800ms";
+            set $proxy_connect_data_timeout "800ms";
         }
 
         if ($request ~ "127.0.0.01:8083") {
             # must be less than 0.5s (server 8082 lua sleep(1s))
-            set $proxy_connect_read_timeout "300ms";
+            set $proxy_connect_data_timeout "300ms";
         }
 
         location / {
@@ -419,7 +419,7 @@ sub start_bind {
         print "+ DNS server: working\n";
 
         END {
-            print("+ try to stop $bind_pid\n");
+            print("+ try to stop\n");
             stop_bind();
         }
     }

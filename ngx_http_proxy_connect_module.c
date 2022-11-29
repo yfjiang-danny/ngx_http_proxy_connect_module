@@ -28,7 +28,7 @@ typedef struct {
     ngx_flag_t                           allow_port_all;
     ngx_array_t                         *allow_ports;
 
-    ngx_msec_t                           read_timeout;
+    ngx_msec_t                           data_timeout;
     ngx_msec_t                           send_timeout;
     ngx_msec_t                           connect_timeout;
 
@@ -101,7 +101,7 @@ typedef struct {
 
     ngx_msec_t                      connect_timeout;
     ngx_msec_t                      send_timeout;
-    ngx_msec_t                      read_timeout;
+    ngx_msec_t                      data_timeout;
 
 } ngx_http_proxy_connect_ctx_t;
 
@@ -164,11 +164,18 @@ static ngx_command_t  ngx_http_proxy_connect_commands[] = {
       0,
       NULL },
 
+    { ngx_string("proxy_connect_data_timeout"),
+      NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_CONF_TAKE1,
+      ngx_conf_set_msec_slot,
+      NGX_HTTP_LOC_CONF_OFFSET,
+      offsetof(ngx_http_proxy_connect_loc_conf_t, data_timeout),
+      NULL },
+
     { ngx_string("proxy_connect_read_timeout"),
       NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_CONF_TAKE1,
       ngx_conf_set_msec_slot,
       NGX_HTTP_LOC_CONF_OFFSET,
-      offsetof(ngx_http_proxy_connect_loc_conf_t, read_timeout),
+      offsetof(ngx_http_proxy_connect_loc_conf_t, data_timeout),
       NULL },
 
     { ngx_string("proxy_connect_send_timeout"),
@@ -260,10 +267,16 @@ static ngx_http_variable_t  ngx_http_proxy_connect_vars[] = {
       offsetof(ngx_http_proxy_connect_ctx_t, connect_timeout),
       NGX_HTTP_VAR_NOCACHEABLE|NGX_HTTP_VAR_CHANGEABLE, 0 },
 
+    { ngx_string("proxy_connect_data_timeout"),
+      ngx_http_proxy_connect_variable_set_time,
+      ngx_http_proxy_connect_variable_get_time,
+      offsetof(ngx_http_proxy_connect_ctx_t, data_timeout),
+      NGX_HTTP_VAR_NOCACHEABLE|NGX_HTTP_VAR_CHANGEABLE, 0 },
+
     { ngx_string("proxy_connect_read_timeout"),
       ngx_http_proxy_connect_variable_set_time,
       ngx_http_proxy_connect_variable_get_time,
-      offsetof(ngx_http_proxy_connect_ctx_t, read_timeout),
+      offsetof(ngx_http_proxy_connect_ctx_t, data_timeout),
       NGX_HTTP_VAR_NOCACHEABLE|NGX_HTTP_VAR_CHANGEABLE, 0 },
 
     { ngx_string("proxy_connect_send_timeout"),
@@ -620,7 +633,7 @@ ngx_http_proxy_connect_send_connection_established(ngx_http_request_t *r)
 
     r->write_event_handler = ngx_http_proxy_connect_send_handler;
 
-    ngx_add_timer(c->write, ctx->read_timeout);
+    ngx_add_timer(c->write, ctx->data_timeout);
 
     if (ngx_handle_write_event(c->write, clcf->send_lowat) != NGX_OK) {
         ngx_http_proxy_connect_finalize_request(r, u,
@@ -784,7 +797,7 @@ ngx_http_proxy_connect_tunnel(ngx_http_request_t *r,
         }
 
         if (!c->read->delayed && !pc->read->delayed) {
-            ngx_add_timer(c->write, ctx->read_timeout);
+            ngx_add_timer(c->write, ctx->data_timeout);
 
         } else if (c->write->timer_set) {
             ngx_del_timer(c->write);
@@ -1928,7 +1941,7 @@ ngx_http_proxy_connect_create_loc_conf(ngx_conf_t *cf)
 
     conf->connect_timeout = NGX_CONF_UNSET_MSEC;
     conf->send_timeout = NGX_CONF_UNSET_MSEC;
-    conf->read_timeout = NGX_CONF_UNSET_MSEC;
+    conf->data_timeout = NGX_CONF_UNSET_MSEC;
 
     conf->send_lowat = NGX_CONF_UNSET_SIZE;
     conf->buffer_size = NGX_CONF_UNSET_SIZE;
@@ -1954,7 +1967,7 @@ ngx_http_proxy_connect_merge_loc_conf(ngx_conf_t *cf, void *parent, void *child)
 
     ngx_conf_merge_msec_value(conf->send_timeout, prev->send_timeout, 60000);
 
-    ngx_conf_merge_msec_value(conf->read_timeout, prev->read_timeout, 60000);
+    ngx_conf_merge_msec_value(conf->data_timeout, prev->data_timeout, 60000);
 
     ngx_conf_merge_size_value(conf->send_lowat, prev->send_lowat, 0);
 
@@ -2346,7 +2359,7 @@ ngx_http_proxy_connect_post_read_handler(ngx_http_request_t *r)
 
         ctx->connect_timeout = pclcf->connect_timeout;
         ctx->send_timeout = pclcf->send_timeout;
-        ctx->read_timeout = pclcf->read_timeout;
+        ctx->data_timeout = pclcf->data_timeout;
 
         ngx_http_set_ctx(r, ctx, ngx_http_proxy_connect_module);
     }
