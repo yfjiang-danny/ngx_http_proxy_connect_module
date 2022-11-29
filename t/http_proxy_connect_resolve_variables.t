@@ -106,7 +106,6 @@ http {
         proxy_connect_allow all;
         proxy_connect_connect_timeout 10s;
         proxy_connect_read_timeout 10s;
-        proxy_connect_send_lowat 0;
 
         set $proxy_connect_connect_timeout  "101ms";
         set $proxy_connect_read_timeout     "103ms";
@@ -158,6 +157,7 @@ http {
     server {
         access_log off;
         listen 8082;
+
         rewrite_by_lua '
             ngx.sleep(1)
             ngx.say("8082 server fbt")
