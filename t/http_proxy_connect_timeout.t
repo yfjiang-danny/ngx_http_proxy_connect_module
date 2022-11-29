@@ -25,7 +25,7 @@ use Net::DNS::Nameserver;
 select STDERR; $| = 1;
 select STDOUT; $| = 1;
 
-my $t = Test::Nginx->new()->has(qw/http proxy proxy_connect/)->plan(16);
+my $t = Test::Nginx->new()->has(qw/http proxy/)->plan(16);
 
 ###############################################################################
 
