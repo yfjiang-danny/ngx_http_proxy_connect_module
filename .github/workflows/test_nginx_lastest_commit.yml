@@ -14,7 +14,9 @@ jobs:
           compiler:
             - { compiler: LLVM, CC: clang, CXX: clang++}
     runs-on: "ubuntu-20.04"
-
+    env:
+       CC: ${{ matrix.compiler.CC }}
+       CXX: ${{ matrix.compiler.CXX }}
     steps:
     - uses: actions/checkout@v3
     - name: get dependencies
