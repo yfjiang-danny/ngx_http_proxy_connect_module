@@ -667,7 +667,6 @@ ngx_http_proxy_connect_tunnel(ngx_http_request_t *r,
                    "proxy_connect: tunnel fu:%ui write:%ui",
                    from_upstream, do_write);
 
-    c = c;
     pc = u->peer.connection;
 
     if (from_upstream) {
