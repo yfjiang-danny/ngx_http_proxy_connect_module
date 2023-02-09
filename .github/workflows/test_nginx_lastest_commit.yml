@@ -10,6 +10,9 @@ jobs:
   test-nginx:
     strategy:
        fail-fast: false
+    matrix:
+       compiler:
+         - { compiler: LLVM, CC: clang, CXX: clang++}
     runs-on: "ubuntu-20.04"
 
     steps:
