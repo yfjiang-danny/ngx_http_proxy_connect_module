@@ -197,7 +197,7 @@ Tips on using curl command:
 * `--proxy-insecure` disables ssl signature verification for ssl connection established with nginx proxy_connect server(`https://localhost:3128`), but it does not disable verification with proxied backend server(`https://nginx.org` in the example below).
   * If you want to disable signature verfication with proxied backend server, you can use `-k` option.
 
-<details><summary>output of curl command</summary>
+<details><summary>output of curl command :point_left: </summary>
 <p>
 
 ```
