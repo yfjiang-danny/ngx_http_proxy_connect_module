@@ -13,7 +13,7 @@ Table of Contents
         * [example for curl](#example-for-curl)
       * [configuration example for CONNECT request in https](#configuration-example-for-connect-request-in-https)
         * [example for curl (CONNECT request in https)](#example-for-curl-connect-request-in-https)
-      * [example for browser](#example-for-browser)
+        * [example for browser](#example-for-browser)
       * [example for basic authentication](#example-for-basic-authentication)
    * [Install](#install)
       * [select patch](#select-patch)
@@ -344,10 +344,10 @@ Select patch
 | 1.13.x ~ 1.14.x  | YES | [proxy_connect_rewrite_1014.patch](patch/proxy_connect_rewrite_1014.patch) |
 | 1.15.2           | YES | [proxy_connect_rewrite_1015.patch](patch/proxy_connect_rewrite_1015.patch) |
 | 1.15.4 ~ 1.16.x  | YES | [proxy_connect_rewrite_101504.patch](patch/proxy_connect_rewrite_101504.patch) |
-| 1.17.x ~ 1.18.0  | YES | [proxy_connect_rewrite_1018.patch](patch/proxy_connect_rewrite_1018.patch) |
+| 1.17.x ~ 1.18.x  | YES | [proxy_connect_rewrite_1018.patch](patch/proxy_connect_rewrite_1018.patch) |
 | 1.19.x ~ 1.21.0  | YES | [proxy_connect_rewrite_1018.patch](patch/proxy_connect_rewrite_1018.patch) |
-| 1.21.1 ~ 1.22.1  | YES | [proxy_connect_rewrite_102101.patch](patch/proxy_connect_rewrite_102101.patch) |
-| 1.23.x           | YES | [proxy_connect_rewrite_102101.patch](patch/proxy_connect_rewrite_102101.patch) |
+| 1.21.1 ~ 1.22.x  | YES | [proxy_connect_rewrite_102101.patch](patch/proxy_connect_rewrite_102101.patch) |
+| 1.23.x ~ 1.24.0  | YES | [proxy_connect_rewrite_102101.patch](patch/proxy_connect_rewrite_102101.patch) |
 
 | OpenResty version | enable REWRITE phase | patch |
 | --: | --: | --: |
@@ -714,7 +714,7 @@ Nginx Compatibility
 
 The latest module is compatible with the following versions of nginx:
 
-* 1.23.2  (version of 1.23.x)
+* 1.23.4  (version of 1.23.x)
 * 1.22.1  (version of 1.22.x)
 * 1.20.2  (version of 1.20.x)
 * 1.18.0  (version of 1.18.x)
